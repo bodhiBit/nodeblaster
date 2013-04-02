@@ -1,3 +1,5 @@
+var myPlayerId;
+
 $(function(){
   implementInput();
   implementSocket();
@@ -43,30 +45,22 @@ function implementInput() {
   $(document).keydown(function(e){
     if (e.which == keyDown) return false;
     keyDown = e.which;
-    setTimeout(function(){
-      keyDown = null;
-    }, 1000);
     
     switch(keyDown) {
       case 32:
-        console.log("set bomb");
-        socket.emit("set bomb");
+        socket.emit("control", "bomb");
         break;
       case 37:
-        console.log("move left");
-        socket.emit("move", "left");
+        socket.emit("control", "left");
         break;
       case 38:
-        console.log("move up");
-        socket.emit("move", "up");
+        socket.emit("control", "up");
         break;
       case 39:
-        console.log("move right");
-        socket.emit("move", "right");
+        socket.emit("control", "right");
         break;
       case 40:
-        console.log("move down");
-        socket.emit("move", "down");
+        socket.emit("control", "down");
         break;
       default:
         console.log("Key down: "+keyDown);
@@ -76,41 +70,29 @@ function implementInput() {
   });
   $(document).keyup(function(e){
     keyDown = null;
-    console.log("stop");
-    socket.emit("stop");
+    socket.emit("control", "stop");
   });
-}
-
-function implementPlayers(count) {
-  var i;
-  for (i=1;i<=count;i++) {
-    if ($("#player"+i).size() == 0) {
-      $("#void").append('<div class="idle player" id="player'+i+'"><img/></div>');
-      $("#player"+i).offset($("#cell_0_0").offset());
-    }
-  }
-  while($("#player"+i).size() > 0) {
-    $("#player"+i).remove();
-    i++;
-  }
 }
 
 var socket;
 function implementSocket() {
   socket = io.connect();
-  socket.on('create battlefield', function (cols, rows) {
+  socket.on('assign player', function(playerId) {
+    myPlayerId = playerId;
+  });
+  socket.on('create battlefield', function(cols, rows) {
     createBattlefield(cols, rows);
   });
-  socket.on('update cell', function (col, row, state) {
+  socket.on('update cell', function(col, row, state) {
     updateCell(col, row, state);
   });
-  socket.on('create sprite', function (properties) {
+  socket.on('create sprite', function(properties) {
     createSprite(properties);
   });
-  socket.on('update sprite', function (properties) {
+  socket.on('update sprite', function(properties) {
     updateSprite(properties);
   });
-  socket.on('remove sprite', function (id) {
+  socket.on('remove sprite', function(id) {
     removeSprite(id);
   });
 }
@@ -128,11 +110,11 @@ function pan(selector) {
   if (count > 0) {
     x = x/count;
     y = y/count;
-    $(window).scrollLeft(x - $(window).width()/2);
-    $(window).scrollTop(y - $(window).height()/2);
+    $(window).scrollLeft(Math.round(x - $(window).width()/2));
+    $(window).scrollTop(Math.round(y - $(window).height()/2));
   }
 }
-setInterval(pan, 20);
+// setInterval(pan, 20);
 
 function removeSprite(id) {
   $("#"+id).remove();
@@ -144,28 +126,29 @@ function updateCell(col, row, state) {
 }
 
 function updateSprite(properties) {
-  if (properties.id != undefined) {
-    var sprite = $("#"+properties.id);
-    if (properties.state != undefined) {
-      sprite.removeClass("idle move dead").addClass(properties.state);
-      if (properties.state == "dead") {
-        var bg_img = sprite.css('background-image').replace(/^url\((.+)\)/, '$1').replace(/["']/g, "");
-        console.log("background image: "+bg_img);
-        $("#"+properties.id+" img").attr("src", bg_img);
-      }
+  if (!properties.id)
+    return false;
+  var sprite = $("#"+properties.id);
+  if (properties.state != undefined) {
+    sprite.removeClass("idle move dead").addClass(properties.state);
+    if (properties.state == "dead") {
+      var bg_img = sprite.css('background-image').replace(/^url\((.+)\)/, '$1').replace(/["']/g, "");
+      console.log("background image: "+bg_img);
+      $("#"+properties.id+" img").attr("src", bg_img);
     }
-    if (properties.direction != undefined)
-      sprite.removeClass("up down left right").addClass(properties.direction);
-    if (properties.state == "move" && properties.col != undefined && properties.row != undefined) {
-      var cell = $("#cell_"+properties.col+"_"+properties.row);
-      if (cell.size() > 0) {
-        sprite.animate({
-          left: (cell.offset().left*2+cell.width()-sprite.width())/2,
-          top: (cell.offset().top+cell.height()-sprite.height()),
-          "z-index": (properties.row*100)
-        }, properties.moveInterval || 1000, "linear");
-      } else console.log("no cell!! #cell_"+properties.col+"_"+properties.row);
-    }
+  }
+  if (properties.direction != undefined)
+    sprite.removeClass("up down left right").addClass(properties.direction);
+  if (properties.state == "move" && properties.col != undefined && properties.row != undefined) {
+    var cell = $("#cell_"+properties.col+"_"+properties.row);
+    if (cell.size() > 0) {
+      sprite.animate({
+        left: (cell.offset().left*2+cell.width()-sprite.width())/2,
+        top: (cell.offset().top+cell.height()-sprite.height()),
+        "z-index": (properties.row*100)
+      }, properties.moveInterval || 1000, "linear");
+      setTimeout(pan, properties.moveInterval || 1000);
+    } else console.log("no cell!! #cell_"+properties.col+"_"+properties.row);
   }
 }
 

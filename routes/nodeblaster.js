@@ -9,6 +9,7 @@ var gameState = {
   players: [],
   monsters: []
 };
+var nextControllerKey = Date.now();
 
 var sockets;
 module.exports = function(io) {
@@ -17,33 +18,8 @@ module.exports = function(io) {
   sockets.on("connection", function(socket){
     brief(socket);
     
-    socket.on("move", function(direction){
-      gameState.players[0].state = "move";
-      gameState.players[0].direction = direction;
-      switch(direction) {
-        case "up":
-          gameState.players[0].row--;
-          break;
-        case "down":
-          gameState.players[0].row++;
-          break;
-        case "left":
-          gameState.players[0].col--;
-          break;
-        case "right":
-          gameState.players[0].col++;
-          break;
-      }
-      sockets.emit("update sprite", gameState.players[0]);
-    });
-    socket.on("stop", function(){
-      gameState.players[0].state = "idle";
-      sockets.emit("update sprite", gameState.players[0]);
-    });
-    socket.on("set bomb", function(){
-      var col = gameState.players[0].col;
-      var row = gameState.players[0].row;
-      updateCell(col, row, "bomb");
+    socket.on("control", function(action){
+      controlPlayer(getSprite("player1"), action);
     });
   });
   
@@ -73,6 +49,34 @@ function brief(socket) {
   for (var i=0;i<gameState.monsters.length;i++) {
     socket.emit("create sprite", gameState.monsters[i]);
   }
+}
+
+function controlPlayer(player, action) {
+  if (["up", "down", "left", "right"].indexOf(action) > -1) {
+    player.state = "move";
+    player.direction = action;
+  }
+  switch(action) {
+    case "up":
+      player.row--;
+      break;
+    case "down":
+      player.row++;
+      break;
+    case "left":
+      player.col--;
+      break;
+    case "right":
+      player.col++;
+      break;
+    case "stop":
+      player.state = "idle";
+      break;
+    case "bomb":
+      updateCell(player.col, player.row, "bomb");
+      break;
+  }
+  sendSprite(player);
 }
 
 function createBattlefield(cols, rows) {
@@ -116,9 +120,46 @@ function getCellState(col, row) {
   return gameState.cellStates[col][row];
 }
 
+function getSprite(id) {
+  var spriteArray;
+  if (id.charAt(0) == "p") {
+    spriteArray = gameState.players;
+  } else if (id.charAt(0) == "m") {
+    spriteArray = gameState.monsters;
+  } else return false;
+  var sprite = false, i=0;
+  while (i<spriteArray.length && !sprite) {
+    if (spriteArray[i].id == id)
+      sprite = spriteArray[i];
+  }
+  return sprite;
+}
+
+function removeSprite(id) {
+  var spriteArray;
+  if (id.charAt(0) == "p") {
+    spriteArray = gameState.players;
+  } else if (id.charAt(0) == "m") {
+    spriteArray = gameState.monsters;
+  } else return false;
+  var removed = false, i=0;
+  while (i<spriteArray.length && !removed) {
+    if (spriteArray[i].id == id) {
+      spriteArray.splice(i, 1);
+      sockets.emit("remove sprite", id);
+      removed = true;
+    }
+  }
+  return removed;
+}
+
+function sendSprite(sprite) {
+  sockets.emit("update sprite", sprite);
+}
+
 function startGame() {
   createBattlefield(13, 11);
-  createPlayers(2);
+  createPlayers(3);
 }
 
 function updateCell(col, row, state) {
@@ -127,4 +168,5 @@ function updateCell(col, row, state) {
   gameState.cellStates[col][row] = state;
   sockets.emit("update cell", col, row, gameState.cellStates[col][row]);
 }
+
 
