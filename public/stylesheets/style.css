@@ -21,48 +21,11 @@ table {
 }
 #battlefield {
   background-color: #fff;
-  border: 1px dashed #33f;
   padding: 32px;
 }
 #battlefield td {
   min-width: 64px;
   height: 64px;
-}
-#battlefield .pillar {
-  background-image: url("pillar.png");
-}
-#battlefield .wall {
-  background-image: url("wall.png");
-}
-#battlefield .bomb {
-  background-image: url("bomb.gif");
-}
-#battlefield .explosion {
-  background-image: url("explosion_center.gif");
-}
-#battlefield .explosion.left {
-  background-image: url("explosion_left1.gif");
-}
-#battlefield .explosion.left.end {
-  background-image: url("explosion_left2.gif");
-}
-#battlefield .explosion.right {
-  background-image: url("explosion_right1.gif");
-}
-#battlefield .explosion.right.end {
-  background-image: url("explosion_right2.gif");
-}
-#battlefield .explosion.up {
-  background-image: url("explosion_up1.gif");
-}
-#battlefield .explosion.up.end {
-  background-image: url("explosion_up2.gif");
-}
-#battlefield .explosion.down {
-  background-image: url("explosion_down1.gif");
-}
-#battlefield .explosion.down.end {
-  background-image: url("explosion_down2.gif");
 }
 .player {
   position: absolute;
@@ -74,61 +37,4 @@ table {
 .player img {
   width: 0px;
   height: 0px;
-}
-#player1.idle {
-  background-image: url("p1_idle.gif");
-}
-#player2.idle {
-  background-image: url("p2_idle.gif");
-}
-#player3.idle {
-  background-image: url("p3_idle.gif");
-}
-#player4.idle {
-  background-image: url("p4_idle.gif");
-}
-#player5.idle {
-  background-image: url("p5_idle.gif");
-}
-#player1.move {
-  background-image: url("p1_move.gif");
-}
-#player2.move {
-  background-image: url("p2_move.gif");
-}
-#player3.move {
-  background-image: url("p3_move.gif");
-}
-#player4.move {
-  background-image: url("p4_move.gif");
-}
-#player5.move {
-  background-image: url("p5_move.gif");
-}
-#player1.dead {
-  background-image: url("p1_dead.gif");
-}
-#player2.dead {
-  background-image: url("p2_dead.gif");
-}
-#player3.dead {
-  background-image: url("p3_dead.gif");
-}
-#player4.dead {
-  background-image: url("p4_dead.gif");
-}
-#player5.dead {
-  background-image: url("p5_dead.gif");
-}
-.player.down {
-  background-position: 0px 0px;
-}
-.player.left {
-  background-position: -64px 0px;
-}
-.player.up {
-  background-position: -128px 0px;
-}
-.player.right {
-  background-position: -192px 0px;
 }
