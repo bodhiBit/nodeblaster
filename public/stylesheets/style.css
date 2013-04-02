@@ -18,6 +18,7 @@ table {
 }
 #void {
   background-color: #000;
+  color: #fff;
 }
 #battlefield {
   background-color: #fff;
@@ -27,14 +28,16 @@ table {
   min-width: 64px;
   height: 64px;
 }
-.player {
+.player,
+.monster {
   position: absolute;
   top: 0px;
   left: 0px;
   width: 64px;
-  height: 96px;
+  height: 64px;
 }
-.player img {
+.player img,
+.monster img {
   width: 0px;
   height: 0px;
 }

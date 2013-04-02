@@ -1,8 +1,8 @@
-#battlefield .pillar {
-  background-image: url("pillar.png");
-}
 #battlefield .wall {
   background-image: url("wall.png");
+}
+#battlefield .pillar {
+  background-image: url("pillar.png");
 }
 #battlefield .bomb {
   background-image: url("bomb.gif");
@@ -33,6 +33,21 @@
 }
 #battlefield .explosion.down.end {
   background-image: url("explosion_down2.gif");
+}
+#battlefield .powerup.bomb {
+  background-image: url("powerup_bomb.gif");
+}
+#battlefield .powerup.flame {
+  background-image: url("powerup_flame.gif");
+}
+#battlefield .powerup.speed {
+  background-image: url("powerup_speed.gif");
+}
+#battlefield .powerup.detonator {
+  background-image: url("powerup_detonator.gif");
+}
+.player {
+  height: 96px;
 }
 #player1.idle {
   background-image: url("p1_idle.gif");
@@ -90,4 +105,10 @@
 }
 .player.right {
   background-position: -192px 0px;
+}
+.monster.move {
+  background-image: url("monster_move.gif");
+}
+.monster.dead {
+  background-image: url("monster_dead.gif");
 }
