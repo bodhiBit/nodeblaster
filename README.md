@@ -1,7 +1,7 @@
 nodeblaster
 ===========
 
-A bomberman like multiplayer game for node and socket.io
+A bomberman-like multiplayer game for node with socket.io
 
 ![screenshot](https://github.com/bodhiBit/nodeblaster/blob/master/public/stylesheets/ballpen/screenie.png?raw=true)
 
@@ -11,5 +11,5 @@ not at all good at.. Any help would be appreciated.. :)
 The game is inspired by the good old Amiga game
 [Dyna Blaster](http://youtu.be/LDkYTl1qGcs?t=20m30s)..
 
-![Original Dyna Blaster](http://www.oldgames.sk/images/oldgames/action/Dyna.Blaster/dyna-009.png)
+![Original Dyna Blaster](http://www.oldgames.sk.nyud.net/images/oldgames/action/Dyna.Blaster/dyna-009.png)
 

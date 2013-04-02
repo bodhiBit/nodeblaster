@@ -106,7 +106,7 @@
 .player.right {
   background-position: -192px 0px;
 }
-.monster.move {
+.monster {
   background-image: url("monster_move.gif");
 }
 .monster.dead {

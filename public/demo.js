@@ -19,7 +19,8 @@ $(function(){
   updateCell(8, 1, "explosion up");
   updateCell(8, 0, "explosion up end");
   updateCell(9, 2, "explosion right");
-  updateCell(10, 2, "explosion right end");
+  updateCell(10, 2, "explosion right");
+  updateCell(11, 2, "explosion right end");
   updateCell(7, 2, "explosion left");
   updateCell(6, 2, "explosion left end");
   updateCell(11, 0, "bomb");
@@ -27,7 +28,7 @@ $(function(){
   createSprite({
     id: "player1",
     type: "player",
-    state: "move",
+    state: "idle",
     direction: "down",
     row: 0,
     col: 0
@@ -73,13 +74,14 @@ $(function(){
     col: 4
   });
   
+  $(".player, .monster").css("cursor", "pointer");
   $(".player, .monster").click(function(e){
     updateSprite({
       id: $(this).attr("id"),
       state: "dead"
     });
   });
-  $(".player").hover(function(e){
+  $(".player, .monster").hover(function(e){
     updateSprite({
       id: $(this).attr("id"),
       state: "idle"
@@ -116,4 +118,5 @@ $(function(){
       direction: "down"
     });
   });
+  pan("nothing");
 });
