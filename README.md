@@ -3,7 +3,7 @@ nodeblaster
 
 A bomberman like multiplayer game for node and socket.io
 
-![screenshot](https://github.com/bodhiBit/nodeblaster/blob/master/public/images/nodeblaster.png?raw=true)
+![screenshot](https://github.com/bodhiBit/nodeblaster/blob/master/public/stylesheets/ballpen/screenie.png?raw=true)
 
 As you can see, the game is in dire need for some appealing graphics, which I am
 not at all good at.. Any help would be appreciated.. :)
