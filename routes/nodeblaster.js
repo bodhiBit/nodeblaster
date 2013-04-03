@@ -2,6 +2,8 @@
 * Server side implementation for nodeblaster
 */
 
+var MAX_PLAYERS = 5;
+
 var gameState = {
   cols: 0,
   rows: 0,
@@ -9,7 +11,6 @@ var gameState = {
   players: [],
   monsters: []
 };
-var nextControllerKey = Date.now();
 
 var sockets;
 module.exports = function(io) {
@@ -17,17 +18,49 @@ module.exports = function(io) {
   
   sockets.on("connection", function(socket){
     brief(socket);
+    addPlayer(socket);
     
     socket.on("control", function(action){
-      controlPlayer(getSprite("player1"), action);
+      socket.get("player", function(err, player) {
+        if (player && !err)
+          controlPlayer(player, action);
+      });
+    });
+    socket.on("disconnect", function(){
+      socket.get("player", function(err, player) {
+        if (player && !err) {
+          player.state = "dead";
+          sendSprite(player);
+          setTimeout(function(){
+            removeSprite(player.id);
+          }, 3000);
+        }
+      });
     });
   });
   
   startGame();
 }
 
-function status(req, res) {
-  res.send(gameState);
+function addPlayer(socket) {
+  if (gameState.players.length >= MAX_PLAYERS)
+    return false;
+  var num = 1;
+  while (getSprite("player"+num))
+    num++;
+  var player = {
+    id: "player"+num,
+    type: "player",
+    state: "idle",
+    direction: "down",
+    col: 0,
+    row: gameState.players.length,
+    moveInterval: 1000
+  };
+  gameState.players.push(player);
+  socket.set("player", player);
+  socket.emit("assign player", player.id);
+  sockets.emit("create sprite", player);
 }
 
 function brief(socket) {
@@ -96,24 +129,6 @@ function createBattlefield(cols, rows) {
   sockets.emit("create battlefield", gameState.cols, gameState.rows);
 }
 
-function createPlayers(count) {
-  gameState.players = [];
-  for (var i=1;i<=count;i++) {
-    var player = {
-      id: "player"+i,
-      type: "player",
-      state: "idle",
-      direction: "down",
-      col: i,
-      row: 0,
-      moveInterval: 1000
-    };
-    gameState.players.push(player);
-    sockets.emit("create sprite", player);
-  }
-}
-
-
 function getCellState(col, row) {
   if (col < 0 || row < 0 || col >= gameState.cols || row >= gameState.rows)
     return "pillar";
@@ -131,6 +146,7 @@ function getSprite(id) {
   while (i<spriteArray.length && !sprite) {
     if (spriteArray[i].id == id)
       sprite = spriteArray[i];
+    i++;
   }
   return sprite;
 }
@@ -149,6 +165,7 @@ function removeSprite(id) {
       sockets.emit("remove sprite", id);
       removed = true;
     }
+    i++;
   }
   return removed;
 }
@@ -159,7 +176,6 @@ function sendSprite(sprite) {
 
 function startGame() {
   createBattlefield(13, 11);
-  createPlayers(3);
 }
 
 function updateCell(col, row, state) {
