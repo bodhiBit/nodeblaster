@@ -96,6 +96,16 @@ function implementInput() {
   });
 }
 
+function killSprite(id) {
+  updateSprite({
+    id: id,
+    state: "dead"
+  });
+  setTimeout(function() {
+    removeSprite(id);
+  }, 3000);
+}
+
 var socket;
 function implementSocket() {
   socket = io.connect();
@@ -110,6 +120,9 @@ function implementSocket() {
   });
   socket.on('create sprite', function(properties) {
     createSprite(properties);
+  });
+  socket.on('kill sprite', function(id) {
+    killSprite(id);
   });
   socket.on('update sprite', function(properties) {
     updateSprite(properties);
