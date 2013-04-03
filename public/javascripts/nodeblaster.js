@@ -3,8 +3,12 @@ var myPlayerId;
 $(function(){
   implementInput();
   implementSocket();
-  pan("#player1");
 });
+
+function assignPlayer(id) {
+  myPlayerId = id;
+  pan("#"+myPlayerId);
+}
 
 function createBattlefield(width, height) {
   var html = '<table id="battlefield">';
@@ -47,20 +51,38 @@ function implementInput() {
     keyDown = e.which;
     
     switch(keyDown) {
-      case 32:
+      case 13: // Enter
         socket.emit("control", "bomb");
         break;
-      case 37:
+      case 32: // Space
+        socket.emit("control", "bomb");
+        break;
+      case 37: // Left arrow
         socket.emit("control", "left");
         break;
-      case 38:
+      case 38: // Up arrow
         socket.emit("control", "up");
         break;
-      case 39:
+      case 39: // Right arrow
         socket.emit("control", "right");
         break;
-      case 40:
+      case 40: // Down arrow
         socket.emit("control", "down");
+        break;
+      case 65: // A
+        socket.emit("control", "left");
+        break;
+      case 76: // L
+        socket.emit("control", "down");
+        break;
+      case 79: // O
+        socket.emit("control", "bomb");
+        break;
+      case 80: // P
+        socket.emit("control", "up");
+        break;
+      case 83: // S
+        socket.emit("control", "right");
         break;
       default:
         console.log("Key down: "+keyDown);
@@ -77,8 +99,8 @@ function implementInput() {
 var socket;
 function implementSocket() {
   socket = io.connect();
-  socket.on('assign player', function(playerId) {
-    myPlayerId = playerId;
+  socket.on('assign player', function(id) {
+    assignPlayer(id);
   });
   socket.on('create battlefield', function(cols, rows) {
     createBattlefield(cols, rows);
