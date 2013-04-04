@@ -148,10 +148,12 @@ function detonateBomb(bomb, direction, blast, col, row) {
     var blast = bomb.blast;
     removeBomb(col, row);
   }
+  var powerup = 0;
   if (getCellState(col, row) == "pillar" || blast < 0) {
     return false;
   } else if (getCellState(col, row) == "wall") {
     blast = 0;
+    powerup = Math.round(Math.random()*15);
   } else if (getCellState(col, row) == "bomb") {
     detonateBomb(getBomb(col, row));
   }
@@ -207,7 +209,22 @@ function detonateBomb(bomb, direction, blast, col, row) {
       }, blastSpeed);
   }
   setTimeout(function(){
-    updateCell(col, row, "floor");
+    switch(powerup) {
+      case 1:
+        updateCell(col, row, "powerup bomb");
+        break;
+      case 2:
+        updateCell(col, row, "powerup flame");
+        break;
+      case 3:
+        updateCell(col, row, "powerup speed");
+        break;
+      case 4:
+        updateCell(col, row, "powerup detonator");
+        break;
+      default:
+        updateCell(col, row, "floor");
+    }
   }, 1000);
 }
 
