@@ -2,7 +2,13 @@
 * Server side implementation for nodeblaster
 */
 
-var MAX_PLAYERS = 5;
+var PLAYER_START = [
+  {col: 0.0, row: 0.0},
+  {col: 1.0, row: 1.0},
+  {col: 1.0, row: 0.0},
+  {col: 0.0, row: 1.0},
+  {col: 0.5, row: 0.5}
+];
 
 var gameState = {
   cols: 0,
@@ -25,7 +31,7 @@ module.exports = function(io) {
       socket.get("player", function(err, player) {
         if (player && !err) {
           if (player.state == "dead") {
-            socket.set("player", undefined);
+            socket.set("player", null);
           } else {
             controlPlayer(player, action);
           }
@@ -45,7 +51,7 @@ module.exports = function(io) {
 }
 
 function addPlayer(socket) {
-  if (gameState.players.length >= MAX_PLAYERS)
+  if (gameState.players.length >= PLAYER_START.length)
     return false;
   var num = 1;
   while (getSprite("player"+num))
@@ -55,13 +61,19 @@ function addPlayer(socket) {
     type: "player",
     state: "idle",
     direction: "down",
-    col: 0,
-    row: gameState.players.length,
+    col: Math.round((gameState.cols-1)*PLAYER_START[num-1].col),
+    row: Math.round((gameState.rows-1)*PLAYER_START[num-1].row),
     moveInterval: 1000,
     bombs: 1,
     blast: 2,
     detonator: false
   };
+  for(var row=player.row-1;row<=player.row+1;row++) {
+    for(var col=player.col-1;col<=player.col+1;col++) {
+      if (getCellState(col, row) != "pillar")
+        updateCell(col, row, "floor");
+    }
+  }
   gameState.players.push(player);
   socket.set("player", player);
   socket.emit("assign player", player.id);
@@ -360,7 +372,8 @@ function runPlayer(player) {
     state: player.state,
     direction: player.direction,
     col: destCol,
-    row: destRow
+    row: destRow,
+    moveInterval: player.moveInterval
   });
   if (player.moving) {
     setTimeout(function(){
@@ -372,7 +385,7 @@ function runPlayer(player) {
       } else if (cellState == "powerup bomb") {
         player.bombs++;
       } else if (cellState == "powerup flame") {
-        player.blast+=2;
+        player.blast++;
       } else if (cellState == "powerup speed") {
         player.moveInterval/=2;
       } else if (cellState == "powerup detonator") {
