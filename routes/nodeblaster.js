@@ -90,31 +90,14 @@ function brief(socket) {
 }
 
 function controlPlayer(player, action) {
-  if (["up", "down", "left", "right"].indexOf(action) > -1) {
-    player.state = "move";
-    player.direction = action;
+  if (action == "bomb") {
+    placeBomb(player);
+  } else {
+    player.action = action;
+    if (!player.moving) {
+      runPlayer(player);
+    }
   }
-  switch(action) {
-    case "up":
-      player.row--;
-      break;
-    case "down":
-      player.row++;
-      break;
-    case "left":
-      player.col--;
-      break;
-    case "right":
-      player.col++;
-      break;
-    case "stop":
-      player.state = "idle";
-      break;
-    case "bomb":
-      placeBomb(player, player.col, player.row);
-      break;
-  }
-  sendSprite(player);
 }
 
 function createBattlefield(cols, rows, wallChance) {
@@ -296,7 +279,9 @@ function killSprite(id) {
   return getSprite(id, "kill");
 }
 
-function placeBomb(player, col, row) {
+function placeBomb(player) {
+  var col = player.col;
+  var row = player.row;
   if (getCellState(col, row) == "bomb")
     return false;
   if (player.bombs <= 0) {
@@ -332,6 +317,77 @@ function removeBomb(col, row) {
 
 function removeSprite(id) {
   return getSprite(id, "remove");
+}
+
+function runPlayer(player) {
+  player.moving = true;
+  player.state = "move";
+  var destCol = player.col;
+  var destRow = player.row;
+  if (["up", "down", "left", "right"].indexOf(player.action) > -1)
+    player.direction = player.action;
+  switch(player.action) {
+    case "up":
+      if (["wall", "pillar"].indexOf(getCellState(destCol, destRow-1))<0)
+        destRow--;
+      else
+        player.moving = false;
+      break;
+    case "down":
+      if (["wall", "pillar"].indexOf(getCellState(destCol, destRow+1))<0)
+        destRow++;
+      else
+        player.moving = false;
+      break;
+    case "left":
+      if (["wall", "pillar"].indexOf(getCellState(destCol-1, destRow))<0)
+        destCol--;
+      else
+        player.moving = false;
+      break;
+    case "right":
+      if (["wall", "pillar"].indexOf(getCellState(destCol+1, destRow))<0)
+        destCol++;
+      else
+        player.moving = false;
+      break;
+    default:
+      player.state = "idle";
+      player.moving = false;
+  }
+  sendSprite({
+    id: player.id,
+    state: player.state,
+    direction: player.direction,
+    col: destCol,
+    row: destRow
+  });
+  if (player.moving) {
+    setTimeout(function(){
+      player.col = destCol;
+      player.row = destRow;
+      var cellState = getCellState(player.col, player.row);
+      if (cellState.indexOf("explosion")>-1) {
+        killSprite(player.id);
+      } else if (cellState == "powerup bomb") {
+        player.bombs++;
+      } else if (cellState == "powerup flame") {
+        player.blast+=2;
+      } else if (cellState == "powerup speed") {
+        player.moveInterval/=2;
+      } else if (cellState == "powerup detonator") {
+        player.detonator = true;
+      } else if (getMonstersAt(player.col, player.row).length>0) {
+        killSprite(player.id);
+      }
+      if (cellState.indexOf("powerup")>-1) {
+        updateCell(player.col, player.row, "floor");
+      }
+    }, player.moveInterval/2);
+    setTimeout(function(){
+      runPlayer(player);
+    }, player.moveInterval);
+  }
 }
 
 function sendSprite(sprite) {
