@@ -117,21 +117,26 @@ function controlPlayer(player, action) {
   sendSprite(player);
 }
 
-function createBattlefield(cols, rows) {
+function createBattlefield(cols, rows, wallChance) {
   gameState.cols = cols;
   gameState.rows = rows;
   gameState.cellStates = [];
+  sockets.emit("create battlefield", cols, rows);
   for (var col=0;col<cols;col++) {
     gameState.cellStates[col] = [];
     for (var row=0;row<rows;row++) {
       if (col%2==1 && row%2==1) {
         gameState.cellStates[col][row] = "pillar";
       } else {
-        gameState.cellStates[col][row] = "floor";
+        var chance = Math.random();
+        if (chance < wallChance) {
+          updateCell(col, row, "wall");
+        } else {
+          gameState.cellStates[col][row] = "floor";
+        }
       }
     }
   }
-  sockets.emit("create battlefield", gameState.cols, gameState.rows);
 }
 
 function detonateBomb(bomb, direction, blast, col, row) {
@@ -150,20 +155,15 @@ function detonateBomb(bomb, direction, blast, col, row) {
   } else if (getCellState(col, row) == "bomb") {
     detonateBomb(getBomb(col, row));
   }
-  for(var i=0;i<gameState.players.length;i++) {
-    var player = gameState.players[i];
-    if (player.col == col && player.row == row) {
-      killSprite(player.id);
-      i--;
-    }
+  var doomedPlayers = getPlayersAt(col, row);
+  for(var i=0;i<doomedPlayers.length;i++) {
+    killSprite(doomedPlayers[i].id);
   }
-  for(var i=0;i<gameState.monsters.length;i++) {
-    var monster = gameState.monsters[i];
-    if (monster.col == col && monster.row == row) {
-      killSprite(monster.id);
-      i--;
-    }
+  var doomedMonsters = getMonstersAt(col, row);
+  for(var i=0;i<doomedMonsters.length;i++) {
+    killSprite(doomedMonsters[i].id);
   }
+  var blastSpeed = 100;
   switch(direction) {
     case "up":
       updateCell(col, row, "explosion up end");
@@ -171,7 +171,7 @@ function detonateBomb(bomb, direction, blast, col, row) {
         setTimeout(function(){
           updateCell(col, row, "explosion up");
           detonateBomb(bomb, "up", blast-1, col, row-1);
-        }, 200);
+        }, blastSpeed);
       break;
     case "down":
       updateCell(col, row, "explosion down end");
@@ -179,7 +179,7 @@ function detonateBomb(bomb, direction, blast, col, row) {
         setTimeout(function(){
           updateCell(col, row, "explosion down");
           detonateBomb(bomb, "down", blast-1, col, row+1);
-        }, 200);
+        }, blastSpeed);
       break;
     case "left":
       updateCell(col, row, "explosion left end");
@@ -187,7 +187,7 @@ function detonateBomb(bomb, direction, blast, col, row) {
         setTimeout(function(){
           updateCell(col, row, "explosion left");
           detonateBomb(bomb, "left", blast-1, col-1, row);
-        }, 200);
+        }, blastSpeed);
       break;
     case "right":
       updateCell(col, row, "explosion right end");
@@ -195,7 +195,7 @@ function detonateBomb(bomb, direction, blast, col, row) {
         setTimeout(function(){
           updateCell(col, row, "explosion right");
           detonateBomb(bomb, "right", blast-1, col+1, row);
-        }, 200);
+        }, blastSpeed);
       break;
     default:
       updateCell(col, row, "explosion");
@@ -204,7 +204,7 @@ function detonateBomb(bomb, direction, blast, col, row) {
         detonateBomb(bomb, "down", blast-1, col, row+1);
         detonateBomb(bomb, "left", blast-1, col-1, row);
         detonateBomb(bomb, "right", blast-1, col+1, row);
-      }, 200);
+      }, blastSpeed);
   }
   setTimeout(function(){
     updateCell(col, row, "floor");
@@ -231,6 +231,26 @@ function getBomb(col, row, remove) {
     i++;
   }
   return bomb;
+}
+
+function getMonstersAt(col, row) {
+  var monsters = [];
+  for(var i=0;i<gameState.monsters.length;i++) {
+    if (gameState.monsters[i].col == col && gameState.monsters[i].row == row) {
+      monsters.push(gameState.monsters[i]);
+    }
+  }
+  return monsters;
+}
+
+function getPlayersAt(col, row) {
+  var players = [];
+  for(var i=0;i<gameState.players.length;i++) {
+    if (gameState.players[i].col == col && gameState.players[i].row == row) {
+      players.push(gameState.players[i]);
+    }
+  }
+  return players;
 }
 
 function getSprite(id, remove) {
@@ -302,7 +322,7 @@ function sendSprite(sprite) {
 }
 
 function startGame() {
-  createBattlefield(13, 11);
+  createBattlefield(13, 11, .5);
 }
 
 function updateCell(col, row, state) {
