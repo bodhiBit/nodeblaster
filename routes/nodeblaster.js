@@ -9,6 +9,12 @@ var PLAYER_START = [
   {col: 0.0, row: 1.0},
   {col: 0.5, row: 0.5}
 ];
+var MONSTER_START = [
+  {col: 0.75, row: 0.75},
+  {col: 0.25, row: 0.25},
+  {col: 0.25, row: 0.75},
+  {col: 0.75, row: 0.25}
+];
 
 var gameState = {
   cols: 0,
@@ -42,6 +48,25 @@ module.exports = function(io) {
   });
   
   startGame();
+}
+
+function addMonster() {
+  var monster = {
+    id: "monster"+gameState.monsters.length,
+    type: "monster",
+    state: "idle",
+    direction: "down",
+    col: Math.round((gameState.cols-1)*MONSTER_START[0].col),
+    row: Math.round((gameState.rows-1)*MONSTER_START[0].row),
+    moveInterval: 1000,
+    bombs: 1,
+    blast: 2,
+    detonator: false
+  };
+  gameState.monsters.push(monster);
+  sockets.emit("create sprite", monster);
+  runMonster(monster);
+  MONSTER_START.push(MONSTER_START.shift());
 }
 
 function addPlayer(socket) {
@@ -337,6 +362,83 @@ function removeSprite(id) {
   return getSprite(id, "remove");
 }
 
+function runMonster(monster) {
+  if (monster.state == "dead")
+    return false;
+  monster.moving = true;
+  monster.state = "move";
+  var destCol = monster.col;
+  var destRow = monster.row;
+  var options = ["up", "down", "left", "right"];
+  monster.action = options[Math.floor(Math.random()*options.length)];
+  if (["up", "down", "left", "right"].indexOf(monster.action) > -1)
+    monster.direction = monster.action;
+  var obstructions = ["wall", "pillar", "bomb"];
+  switch(monster.action) {
+    case "up":
+      if (obstructions.indexOf(getCellState(destCol, destRow-1))<0)
+        destRow--;
+      else
+        monster.moving = false;
+      break;
+    case "down":
+      if (obstructions.indexOf(getCellState(destCol, destRow+1))<0)
+        destRow++;
+      else
+        monster.moving = false;
+      break;
+    case "left":
+      if (obstructions.indexOf(getCellState(destCol-1, destRow))<0)
+        destCol--;
+      else
+        monster.moving = false;
+      break;
+    case "right":
+      if (obstructions.indexOf(getCellState(destCol+1, destRow))<0)
+        destCol++;
+      else
+        monster.moving = false;
+      break;
+    default:
+      monster.state = "idle";
+      monster.moving = false;
+  }
+  var sprite = {
+    id: monster.id,
+    state: monster.state,
+    direction: monster.direction,
+    moveInterval: monster.moveInterval
+  };
+  if (monster.col != destCol || monster.row != destRow) {
+    sprite.col = destCol;
+    sprite.row = destRow;
+  }
+  sendSprite(sprite);
+  if (monster.moving) {
+    setTimeout(function(){
+      monster.col = destCol;
+      monster.row = destRow;
+      var cellState = getCellState(monster.col, monster.row);
+      var doomedPlayers = getPlayersAt(monster.col, monster.row);
+      if (cellState.indexOf("explosion")>-1) {
+        killSprite(monster.id);
+      } else if (doomedPlayers.length>0) {
+        for (var i=0;i<doomedPlayers.length;i++) {
+          var player = doomedPlayers[i];
+          killSprite(player.id);
+        }
+      }
+    }, monster.moveInterval/2);
+    setTimeout(function(){
+      runMonster(monster);
+    }, monster.moveInterval);
+  } else {
+    setTimeout(function(){
+      runMonster(monster);
+    }, Math.random()*1000);
+  }
+}
+
 function runPlayer(player) {
   if (player.state == "dead")
     return false;
@@ -423,6 +525,7 @@ function sendSprite(sprite) {
 
 function startGame() {
   createBattlefield(13, 11, .5);
+  for(var i=0;i<8;i++) addMonster();
 }
 
 function updateCell(col, row, state) {
