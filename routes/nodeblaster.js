@@ -51,8 +51,11 @@ module.exports = function(io) {
 }
 
 function addMonster() {
+  var num = 1;
+  while (getSprite("monster"+num))
+    num++;
   var monster = {
-    id: "monster"+gameState.monsters.length,
+    id: "monster"+num,
     type: "monster",
     state: "idle",
     direction: "down",
@@ -67,6 +70,10 @@ function addMonster() {
   sockets.emit("create sprite", monster);
   runMonster(monster);
   MONSTER_START.push(MONSTER_START.shift());
+}
+
+function addMonsters() {
+  for(var i=0;i<PLAYER_START.length*2;i++) addMonster();
 }
 
 function addPlayer(socket) {
@@ -98,6 +105,8 @@ function addPlayer(socket) {
   socket.set("player", player);
   socket.emit("assign player", player.id);
   sockets.emit("create sprite", player);
+  while (gameState.monsters.length > 2*(PLAYER_START.length-gameState.players.length))
+    killSprite(gameState.monsters[0].id);
 }
 
 function brief(socket) {
@@ -319,6 +328,11 @@ function getSprite(id, remove) {
 }
 
 function killSprite(id) {
+  if (id.charAt(0) == "p")
+    setTimeout(function(){
+      addMonster();
+      addMonster();
+    }, 5000);
   return getSprite(id, "kill");
 }
 
@@ -525,7 +539,7 @@ function sendSprite(sprite) {
 
 function startGame() {
   createBattlefield(13, 11, .5);
-  for(var i=0;i<8;i++) addMonster();
+  addMonsters();
 }
 
 function updateCell(col, row, state) {
