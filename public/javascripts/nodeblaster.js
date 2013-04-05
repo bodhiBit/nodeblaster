@@ -1,3 +1,7 @@
+/**
+* Client side implementation for nodeblaster
+*/
+
 var myPlayerId;
 
 $(function(){
@@ -30,7 +34,9 @@ function createBattlefield(width, height) {
 
 function createSprite(properties) {
   if ($("#"+properties.id).size() == 0) {
-    $("#void").append('<div class="idle down '+properties.type+'" id="'+properties.id+'"><img/></div>');
+    $("#void").append('<div class="dead down '+properties.type+'" id="'+properties.id+'"><img/></div>');
+    var bg_img = $("#"+properties.id).css('background-image').replace(/^url\((.+)\)/, '$1').replace(/["']/g, "");
+    $("#"+properties.id+" img").attr("src", bg_img);
     updateSprite({
       id: properties.id,
       state: "move",
@@ -166,12 +172,12 @@ function updateSprite(properties) {
     return false;
   var sprite = $("#"+properties.id);
   if (properties.state != undefined) {
-    sprite.removeClass("idle move dead").addClass(properties.state);
     if (properties.state == "dead") {
-      var bg_img = sprite.css('background-image').replace(/^url\((.+)\)/, '$1').replace(/["']/g, "");
-      console.log("background image: "+bg_img);
-      $("#"+properties.id+" img").attr("src", bg_img);
+      var img = $("#"+properties.id+" img").attr("src");
+      $("#"+properties.id+" img").removeAttr("src", "");
+      $("#"+properties.id+" img").attr("src", img);
     }
+    sprite.removeClass("idle move dead").addClass(properties.state);
   }
   if (properties.direction != undefined)
     sprite.removeClass("up down left right").addClass(properties.direction);
