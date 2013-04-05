@@ -91,6 +91,7 @@ function implementInput() {
     return false;
   });
   $(document).keyup(function(e){
+    if (e.which != keyDown) return false;
     keyDown = null;
     socket.emit("control", "stop");
   });

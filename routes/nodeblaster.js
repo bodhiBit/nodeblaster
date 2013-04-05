@@ -18,6 +18,7 @@ var gameState = {
   monsters: [],
   bombs: []
 };
+var genocideTO;
 
 var sockets;
 module.exports = function(io) {
@@ -38,19 +39,13 @@ module.exports = function(io) {
         }
       });
     });
-    socket.on("disconnect", function(){
-      socket.get("player", function(err, player) {
-        if (player && !err) {
-          killSprite(player.id);
-        }
-      });
-    });
   });
   
   startGame();
 }
 
 function addPlayer(socket) {
+  setGenocide();
   if (gameState.players.length >= PLAYER_START.length)
     return false;
   var num = 1;
@@ -102,6 +97,7 @@ function brief(socket) {
 }
 
 function controlPlayer(player, action) {
+  setGenocide();
   if (action == "bomb") {
     placeBomb(player);
   } else {
@@ -223,6 +219,16 @@ function detonateBomb(bomb, direction, blast, col, row) {
   }, 1000);
 }
 
+function setGenocide() {
+  clearTimeout(genocideTO);
+  genocideTO = setTimeout(function(){
+    for(var i=0;i<gameState.players.length;i++) {
+      gameState.players[i].detonator = false;
+      placeBomb(gameState.players[i]);
+    }
+  }, 15000);
+}
+
 function getCellState(col, row) {
   if (col < 0 || row < 0 || col >= gameState.cols || row >= gameState.rows)
     return "pillar";
@@ -332,33 +338,36 @@ function removeSprite(id) {
 }
 
 function runPlayer(player) {
+  if (player.state == "dead")
+    return false;
   player.moving = true;
   player.state = "move";
   var destCol = player.col;
   var destRow = player.row;
   if (["up", "down", "left", "right"].indexOf(player.action) > -1)
     player.direction = player.action;
+  var obstructions = ["wall", "pillar", "bomb"];
   switch(player.action) {
     case "up":
-      if (["wall", "pillar"].indexOf(getCellState(destCol, destRow-1))<0)
+      if (obstructions.indexOf(getCellState(destCol, destRow-1))<0)
         destRow--;
       else
         player.moving = false;
       break;
     case "down":
-      if (["wall", "pillar"].indexOf(getCellState(destCol, destRow+1))<0)
+      if (obstructions.indexOf(getCellState(destCol, destRow+1))<0)
         destRow++;
       else
         player.moving = false;
       break;
     case "left":
-      if (["wall", "pillar"].indexOf(getCellState(destCol-1, destRow))<0)
+      if (obstructions.indexOf(getCellState(destCol-1, destRow))<0)
         destCol--;
       else
         player.moving = false;
       break;
     case "right":
-      if (["wall", "pillar"].indexOf(getCellState(destCol+1, destRow))<0)
+      if (obstructions.indexOf(getCellState(destCol+1, destRow))<0)
         destCol++;
       else
         player.moving = false;
@@ -367,14 +376,17 @@ function runPlayer(player) {
       player.state = "idle";
       player.moving = false;
   }
-  sendSprite({
+  var sprite = {
     id: player.id,
     state: player.state,
     direction: player.direction,
-    col: destCol,
-    row: destRow,
     moveInterval: player.moveInterval
-  });
+  };
+  if (player.col != destCol || player.row != destRow) {
+    sprite.col = destCol;
+    sprite.row = destRow;
+  }
+  sendSprite(sprite);
   if (player.moving) {
     setTimeout(function(){
       player.col = destCol;
@@ -387,9 +399,11 @@ function runPlayer(player) {
       } else if (cellState == "powerup flame") {
         player.blast++;
       } else if (cellState == "powerup speed") {
-        player.moveInterval/=2;
+        player.moveInterval*=2/3;
       } else if (cellState == "powerup detonator") {
         player.detonator = true;
+        if (player.bombs > 1)
+          player.bombs--;
       } else if (getMonstersAt(player.col, player.row).length>0) {
         killSprite(player.id);
       }
