@@ -1,21 +1,21 @@
-
 /**
  * Module dependencies.
  */
+/*jslint indent: 2, node: true, nomen: true */
+"use strict";
 
-var express = require("express")
-  , routes = require("./routes")
-  , http = require("http")
-  , path = require("path")
-  , io = require("socket.io")
-  , nodeblaster = require("./routes/nodeblaster.js");
-  
+var express = require("express"),
+  routes = require("./routes"),
+  http = require("http"),
+  path = require("path"),
+  io = require("socket.io"),
+  nodeblaster = require("./routes/nodeblaster.js");
 
 var app = express();
 var server = http.createServer(app);
 var io = io.listen(server);
 
-app.configure(function(){
+app.configure(function () {
   app.set("port", process.env.PORT || 3000);
   app.set("views", __dirname + "/views");
   app.set("view engine", "jade");
@@ -29,13 +29,13 @@ app.configure(function(){
   app.use(express.directory(path.join(__dirname, "public")));
 });
 
-app.configure("development", function(){
+app.configure("development", function () {
   app.use(express.errorHandler());
 });
 
 app.get("/", routes.index);
 nodeblaster(io);
 
-server.listen(app.get("port"), function(){
+server.listen(app.get("port"), function () {
   console.log("Express server listening on port " + app.get("port"));
 });

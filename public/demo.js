@@ -1,8 +1,11 @@
 /**
-* demo.js
-*/
+ * demo.js
+ */
+/*jslint indent: 2, browser: true */
+/*global $, io, createBattlefield, updateCell, createSprite, updateSprite, pan */
+"use strict";
 
-$(function(){
+$(function () {
   createBattlefield(13, 11);
   updateCell(2, 2, "wall");
   updateCell(1, 2, "wall");
@@ -24,7 +27,7 @@ $(function(){
   updateCell(7, 2, "explosion left");
   updateCell(6, 2, "explosion left end");
   updateCell(11, 0, "bomb");
-  
+
   createSprite({
     id: "player1",
     type: "player",
@@ -73,46 +76,46 @@ $(function(){
     row: 4,
     col: 4
   });
-  
+
   $(".player, .monster").css("cursor", "pointer");
-  $(".player, .monster").click(function(e){
+  $(".player, .monster").click(function (e) {
     updateSprite({
       id: $(this).attr("id"),
       state: "dead"
     });
   });
-  $(".player, .monster").hover(function(e){
+  $(".player, .monster").hover(function (e) {
     updateSprite({
       id: $(this).attr("id"),
       state: "idle"
     });
   });
-  $(".player, .monster").mouseleave(function(e){
+  $(".player, .monster").mouseleave(function (e) {
     updateSprite({
       id: $(this).attr("id"),
       state: "move"
     });
   });
-  
-  $("#cell_5_5").hover(function(e){
+
+  $("#cell_5_5").hover(function (e) {
     updateSprite({
       id: "player5",
       direction: "left"
     });
   });
-  $("#cell_7_5").hover(function(e){
+  $("#cell_7_5").hover(function (e) {
     updateSprite({
       id: "player5",
       direction: "right"
     });
   });
-  $("#cell_6_4").hover(function(e){
+  $("#cell_6_4").hover(function (e) {
     updateSprite({
       id: "player5",
       direction: "up"
     });
   });
-  $("#cell_6_6").hover(function(e){
+  $("#cell_6_6").hover(function (e) {
     updateSprite({
       id: "player5",
       direction: "down"
@@ -120,3 +123,4 @@ $(function(){
   });
   pan("nothing");
 });
+
