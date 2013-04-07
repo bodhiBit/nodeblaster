@@ -45,9 +45,14 @@ var gameState = {
   bombs: []
 };
 var genocideTO;
-
 var sockets;
-/*global brief, addPlayer, controlPlayer, startGame */
+
+/*global addMonster, addMonsters, addPlayer, brief, clearTimeout, controlPlayer,
+  createBattlefield, detonateBomb, getBomb, getCellState, getMonstersAt,
+  getPlayersAt, getSprite, killSprite, module, placeBomb, removeBomb,
+  removeSprite, runMonster, runPlayer, sendSprite, setGenocide, setTimeout,
+  startGame, updateCell */
+
 module.exports = function (io) {
   sockets = io.sockets;
 
@@ -71,7 +76,6 @@ module.exports = function (io) {
   startGame();
 };
 
-/*global getSprite, runMonster */
 function addMonster() {
   var num = 1,
     monster;
@@ -103,7 +107,6 @@ function addMonsters() {
   }
 }
 
-/*global setGenocide, getCellState, updateCell, killSprite */
 function addPlayer(socket) {
   var player, num, row, col;
 
@@ -138,7 +141,8 @@ function addPlayer(socket) {
   socket.set("player", player);
   socket.emit("assign player", player.id);
   sockets.emit("create sprite", player);
-  while (gameState.monsters.length > 2 * (PLAYER_START.length - gameState.players.length)) {
+  while (gameState.monsters.length > 2 * (PLAYER_START.length - gameState.players
+    .length)) {
     killSprite(gameState.monsters[0].id);
   }
 }
@@ -168,7 +172,6 @@ function brief(socket) {
   }
 }
 
-/*global placeBomb, runPlayer */
 function controlPlayer(player, action) {
   setGenocide();
   if (action === "bomb") {
@@ -205,7 +208,6 @@ function createBattlefield(cols, rows, wallChance) {
   }
 }
 
-/*global removeBomb, getBomb, getPlayersAt, getMonstersAt */
 function detonateBomb(bomb, direction, blast, col, row) {
   var doomedPlayers, doomedMonsters, powerup = 0,
     i, blastSpeed = 100;
@@ -302,25 +304,6 @@ function detonateBomb(bomb, direction, blast, col, row) {
   }, 1000);
 }
 
-function setGenocide() {
-  var i;
-
-  clearTimeout(genocideTO);
-  genocideTO = setTimeout(function () {
-    for (i = 0; i < gameState.players.length; i += 1) {
-      gameState.players[i].detonator = false;
-      placeBomb(gameState.players[i]);
-    }
-  }, 15000);
-}
-
-function getCellState(col, row) {
-  if (col < 0 || row < 0 || col >= gameState.cols || row >= gameState.rows) {
-    return "pillar";
-  }
-  return gameState.cellStates[col][row];
-}
-
 function getBomb(col, row, remove) {
   var bomb = false,
     i = 0;
@@ -336,6 +319,13 @@ function getBomb(col, row, remove) {
     i += 1;
   }
   return bomb;
+}
+
+function getCellState(col, row) {
+  if (col < 0 || row < 0 || col >= gameState.cols || row >= gameState.rows) {
+    return "pillar";
+  }
+  return gameState.cellStates[col][row];
 }
 
 function getMonstersAt(col, row) {
@@ -439,7 +429,6 @@ function removeSprite(id) {
   return getSprite(id, "remove");
 }
 
-/*global sendSprite */
 function runMonster(monster) {
   var destCol = monster.col,
     destRow = monster.row,
@@ -620,8 +609,20 @@ function sendSprite(sprite) {
   sockets.emit("update sprite", sprite);
 }
 
+function setGenocide() {
+  var i;
+
+  clearTimeout(genocideTO);
+  genocideTO = setTimeout(function () {
+    for (i = 0; i < gameState.players.length; i += 1) {
+      gameState.players[i].detonator = false;
+      placeBomb(gameState.players[i]);
+    }
+  }, 15000);
+}
+
 function startGame() {
-  createBattlefield(13, 11, 0.5);
+  createBattlefield(50, 50, 0.5);
   addMonsters();
 }
 

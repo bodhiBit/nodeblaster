@@ -9,69 +9,14 @@ var myPlayerId;
 var panSelector = ".player";
 var socket;
 
-function pan(selector) {
-  if (selector !== undefined) {
-    panSelector = selector;
-  }
-  var x = 0,
-    y = 0,
-    count = 0;
-  $(panSelector).each(function (i, el) {
-    x += ($(el).offset().left * 2 + $(el).width()) / 2;
-    y += ($(el).offset().top * 2 + $(el).height()) / 2;
-    count += 1;
-  });
-  if (count > 0) {
-    x = x / count;
-    y = y / count;
-    $(window).scrollLeft(Math.round(x - $(window).width() / 2));
-    $(window).scrollTop(Math.round(y - $(window).height() / 2));
-  }
-}
-// setInterval(pan, 20);
+/*global assignPlayer, createBattlefield, createSprite, implementInput,
+  implementSocket, killSprite, pan, removeSprite, setTimeout, updateCell,
+  updateSprite */
 
-function removeSprite(id) {
-  $("#" + id).remove();
-}
-
-function updateCell(col, row, state) {
-  $("#cell_" + col + "_" + row).removeClass("floor wall pillar bomb explosion up down" + " left right end powerup flame speed detonator").addClass(state);
-}
-
-function updateSprite(properties) {
-  var sprite, img, cell;
-
-  if (!properties.id) {
-    return false;
-  }
-  sprite = $("#" + properties.id);
-  if (properties.state !== undefined) {
-    if (properties.state === "dead") {
-      img = $("#" + properties.id + " img").attr("src");
-      $("#" + properties.id + " img").removeAttr("src", "");
-      $("#" + properties.id + " img").attr("src", img);
-    }
-    sprite.removeClass("idle move dead").addClass(properties.state);
-  }
-  if (properties.direction !== undefined) {
-    sprite.removeClass("up down left right").addClass(properties.direction);
-  }
-  if (properties.state === "move" && properties.col !== undefined && properties.row !== undefined) {
-    cell = $("#cell_" + properties.col + "_" + properties.row);
-    if (cell.size() > 0) {
-      sprite.animate({
-        left: (cell.offset().left * 2 + cell.width() - sprite.width()) / 2,
-        top: (cell.offset().top + cell.height() - sprite.height()),
-        "z-index": (properties.row * 100)
-      }, properties.moveInterval || 1000, "linear");
-      setTimeout(pan, properties.moveInterval || 1000);
-    } else {
-      console.log("no cell!! #cell_" + properties.col + "_" + properties.row);
-    }
-  }
-}
-
-/* "was used before it was defined" */
+$(function () {
+  implementInput();
+  implementSocket();
+});
 
 function assignPlayer(id) {
   myPlayerId = id;
@@ -91,7 +36,8 @@ function createBattlefield(width, height) {
       } else {
         cellClass = "floor";
       }
-      html += '<td class="' + cellClass + '" id="cell_' + col + '_' + row + '"></td>';
+      html += '<td class="' + cellClass + '" id="cell_' + col + '_' + row +
+        '"></td>';
     }
     html += '</tr>';
   }
@@ -103,9 +49,12 @@ function createSprite(properties) {
   var bg_img;
 
   if ($("#" + properties.id).size() === 0) {
-    $("#void").append('<div class="dead down ' + properties.type + '" id="' + properties.id + '"><img/></div>');
-    bg_img = $("#" + properties.id).css('background-image').replace(/^url\(([\w\W]+)\)/, '$1').replace(/["']/g, "");
-    console.log("bg_img: " + bg_img);
+    $("#void").append('<div class="dead down ' + properties.type + '" id="' +
+      properties.id + '"><img/></div>');
+    bg_img = $("#" + properties.id).css('background-image').replace(
+      /^url\(([\w\W]+)\)/,
+      '$1'
+    ).replace(/["']/g, "");
     $("#" + properties.id + " img").attr("src", bg_img);
     updateSprite({
       id: properties.id,
@@ -189,16 +138,6 @@ function implementInput() {
   });
 }
 
-function killSprite(id) {
-  updateSprite({
-    id: id,
-    state: "dead"
-  });
-  setTimeout(function () {
-    removeSprite(id);
-  }, 3000);
-}
-
 function implementSocket() {
   socket = io.connect();
   socket.on('assign player', function (id) {
@@ -224,8 +163,78 @@ function implementSocket() {
   });
 }
 
-$(function () {
-  implementInput();
-  implementSocket();
-});
+function killSprite(id) {
+  updateSprite({
+    id: id,
+    state: "dead"
+  });
+  setTimeout(function () {
+    removeSprite(id);
+  }, 3000);
+}
+
+function pan(selector) {
+  if (selector !== undefined) {
+    panSelector = selector;
+  }
+  var x = 0,
+    y = 0,
+    count = 0;
+  $(panSelector).each(function (i, el) {
+    x += ($(el).offset().left * 2 + $(el).width()) / 2;
+    y += ($(el).offset().top * 2 + $(el).height()) / 2;
+    count += 1;
+  });
+  if (count > 0) {
+    x = x / count;
+    y = y / count;
+    $(window).scrollLeft(Math.round(x - $(window).width() / 2));
+    $(window).scrollTop(Math.round(y - $(window).height() / 2));
+  }
+}
+
+function removeSprite(id) {
+  $("#" + id).remove();
+}
+
+function updateCell(col, row, state) {
+  $("#cell_" + col + "_" + row).removeClass(
+    "floor wall pillar bomb explosion up down" +
+      " left right end powerup flame speed detonator"
+  ).addClass(state);
+}
+
+function updateSprite(properties) {
+  var sprite, img, cell;
+
+  if (!properties.id) {
+    return false;
+  }
+  sprite = $("#" + properties.id);
+  if (properties.state !== undefined) {
+    if (properties.state === "dead") {
+      img = $("#" + properties.id + " img").attr("src");
+      $("#" + properties.id + " img").removeAttr("src", "");
+      $("#" + properties.id + " img").attr("src", img);
+    }
+    sprite.removeClass("idle move dead").addClass(properties.state);
+  }
+  if (properties.direction !== undefined) {
+    sprite.removeClass("up down left right").addClass(properties.direction);
+  }
+  if (properties.state === "move" && properties.col !== undefined &&
+      properties.row !== undefined) {
+    cell = $("#cell_" + properties.col + "_" + properties.row);
+    if (cell.size() > 0) {
+      sprite.animate({
+        left: (cell.offset().left * 2 + cell.width() - sprite.width()) / 2,
+        top: (cell.offset().top + cell.height() - sprite.height()),
+        "z-index": (properties.row * 100)
+      }, properties.moveInterval || 1000, "linear");
+      setTimeout(pan, properties.moveInterval || 1000);
+    } else {
+      console.log("no cell!! #cell_" + properties.col + "_" + properties.row);
+    }
+  }
+}
 
