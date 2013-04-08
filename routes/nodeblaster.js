@@ -614,11 +614,10 @@ function setGenocide() {
 
   clearTimeout(genocideTO);
   genocideTO = setTimeout(function () {
-    for (i = 0; i < gameState.players.length; i += 1) {
-      gameState.players[i].detonator = false;
-      placeBomb(gameState.players[i]);
+    for (i = gameState.players.length-1; i >= 0; i -= 1) {
+      killSprite(gameState.players[i].id);
     }
-  }, 15000);
+  }, 60000);
 }
 
 function startGame() {
