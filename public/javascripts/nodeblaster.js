@@ -6,7 +6,7 @@
 "use strict";
 
 var myPlayerId;
-var panSelector = ".player";
+var panSelector = ".player", panEnd = Date.now();
 var socket;
 
 /*global assignPlayer, createBattlefield, createSprite, implementInput,
@@ -16,11 +16,16 @@ var socket;
 $(function () {
   implementInput();
   implementSocket();
+  setInterval(pan, 20);
 });
 
 function assignPlayer(id) {
   myPlayerId = id;
-  pan("#" + myPlayerId);
+  if (id) {
+    pan("#" + myPlayerId);
+  } else {
+    pan(".player");
+  }
 }
 
 function createBattlefield(width, height) {
@@ -177,6 +182,9 @@ function pan(selector) {
   if (selector !== undefined) {
     panSelector = selector;
   }
+  if (panEnd < Date.now()) {
+    return false;
+  }
   var x = 0,
     y = 0,
     count = 0;
@@ -195,6 +203,9 @@ function pan(selector) {
 
 function removeSprite(id) {
   $("#" + id).remove();
+  if (myPlayerId === id) {
+    assignPlayer(null);
+  }
 }
 
 function updateCell(col, row, state) {
@@ -231,7 +242,10 @@ function updateSprite(properties) {
         top: (cell.offset().top + cell.height() - sprite.height()),
         "z-index": (properties.row * 100)
       }, properties.moveInterval || 1000, "linear");
-      setTimeout(pan, properties.moveInterval || 1000);
+      // setTimeout(pan, properties.moveInterval || 1000);
+      if (properties.id.charAt(0) === "p") {
+        panEnd = Date.now() + (properties.moveInterval || 1000);
+      }
     } else {
       console.log("no cell!! #cell_" + properties.col + "_" + properties.row);
     }

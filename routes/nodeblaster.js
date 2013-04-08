@@ -622,7 +622,7 @@ function setGenocide() {
 }
 
 function startGame() {
-  createBattlefield(50, 50, 0.5);
+  createBattlefield(13, 11, 0.5);
   addMonsters();
 }
 
