@@ -5,7 +5,6 @@
 "use strict";
 
 var express = require("express"),
-  routes = require("./routes"),
   http = require("http"),
   path = require("path"),
   io = require("socket.io"),
@@ -33,7 +32,6 @@ app.configure("development", function () {
   app.use(express.errorHandler());
 });
 
-app.get("/", routes.index);
 nodeblaster(io);
 
 server.listen(app.get("port"), function () {
