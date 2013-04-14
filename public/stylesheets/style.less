@@ -8,6 +8,9 @@ body, table, td {
 }
 
 html {
+  background-color: #000;
+  color: #fff;
+  font-family: sans-serif;
   overflow: hidden;
 }
 
@@ -18,11 +21,6 @@ html, body, #screen {
 
 table {
   table-layout: fixed;
-}
-
-#void {
-  background-color: #000;
-  color: #fff;
 }
 
 #battlefield {
@@ -49,3 +47,33 @@ table {
     height: 0px;
   }
 }
+
+#signupWindow {
+  background: #fff;
+  color: #000;
+  
+  max-width: 480px;
+}
+
+#playerList {
+  margin: 10px;
+  padding: 10px;
+  text-align: center;
+
+  li {
+    display: inline-block;
+    
+    span.floor {
+      display: block;
+      
+      min-width: 64px;
+      min-height: 64px;
+      
+      .player {
+        position: static;
+      }
+    }
+  }
+}
+
+

@@ -8,6 +8,9 @@ td {
   padding: 0px;
 }
 html {
+  background-color: #000;
+  color: #fff;
+  font-family: sans-serif;
   overflow: hidden;
 }
 html,
@@ -18,10 +21,6 @@ body,
 }
 table {
   table-layout: fixed;
-}
-#void {
-  background-color: #000;
-  color: #fff;
 }
 #battlefield {
   background-color: #fff;
@@ -43,4 +42,25 @@ table {
 .monster img {
   width: 0px;
   height: 0px;
+}
+#signupWindow {
+  background: #fff;
+  color: #000;
+  max-width: 480px;
+}
+#playerList {
+  margin: 10px;
+  padding: 10px;
+  text-align: center;
+}
+#playerList li {
+  display: inline-block;
+}
+#playerList li span.floor {
+  display: block;
+  min-width: 64px;
+  min-height: 64px;
+}
+#playerList li span.floor .player {
+  position: static;
 }

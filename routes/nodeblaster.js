@@ -37,8 +37,9 @@ var PLAYER_START = [{
     ];
 
 var gameState = {
-  cols: 0,
-  rows: 0,
+  gameOn: false,
+  cols: 13,
+  rows: 11,
   cellStates: [],
   players: [],
   monsters: [],
@@ -47,19 +48,20 @@ var gameState = {
 var genocideTO;
 var sockets;
 
-/*global addMonster, addMonsters, addPlayer, brief, clearTimeout, controlPlayer,
+/*global addMonster, addMonsters, addPlayer, brief, controlPlayer,
   createBattlefield, detonateBomb, getBomb, getCellState, getMonstersAt,
-  getPlayersAt, getSprite, killSprite, module, placeBomb, removeBomb,
-  removeSprite, runMonster, runPlayer, sendSprite, setGenocide, setTimeout,
-  startGame, updateCell */
+  getPlayersAt, getSprite, killSprite, placeBomb, removeBomb, removeSprite,
+  runMonster, runPlayer, sendSprite, setGenocide, startGame, updateCell */
 
 module.exports = function (io) {
   sockets = io.sockets;
 
   sockets.on("connection", function (socket) {
     brief(socket);
-    addPlayer(socket);
 
+    socket.on("sign up", function (name) {
+      addPlayer(socket, name);
+    });
     socket.on("control", function (action) {
       socket.get("player", function (err, player) {
         if (player && !err) {
@@ -73,7 +75,7 @@ module.exports = function (io) {
     });
   });
 
-  startGame();
+  // startGame();
 };
 
 function addMonster() {
@@ -100,18 +102,18 @@ function addMonster() {
   MONSTER_START.push(MONSTER_START.shift());
 }
 
-function addMonsters() {
+function addMonsters(count) {
   var i;
-  for (i = 0; i < PLAYER_START.length * 2; i += 1) {
+  for (i = 0; i < count; i += 1) {
     addMonster();
   }
 }
 
-function addPlayer(socket) {
+function addPlayer(socket, name) {
   var player, num, row, col;
 
   setGenocide();
-  if (gameState.players.length >= PLAYER_START.length) {
+  if (gameState.gameOn || gameState.players.length >= PLAYER_START.length) {
     return false;
   }
   num = 1;
@@ -120,6 +122,7 @@ function addPlayer(socket) {
   }
   player = {
     id: "player" + num,
+    name: name,
     type: "player",
     state: "idle",
     direction: "down",
@@ -141,28 +144,33 @@ function addPlayer(socket) {
   socket.set("player", player);
   socket.emit("assign player", player.id);
   sockets.emit("create sprite", player);
-  while (gameState.monsters.length > 2 * (PLAYER_START.length - gameState.players
-    .length)) {
-    killSprite(gameState.monsters[0].id);
+  if (gameState.players.length === 1) {
+    setTimeout(function () {
+      startGame();
+    }, 10000);
   }
 }
 
 function brief(socket) {
   var row, col, i;
 
-  socket.emit("create battlefield", gameState.cols, gameState.rows);
-  for (row = 0; row < gameState.rows; row += 1) {
-    for (col = 0; col < gameState.cols; col += 1) {
-      if (col % 2 === 1 && row % 2 === 1) {
-        if (gameState.cellStates[col][row] !== "pillar") {
-          socket.emit("update cell", col, row, gameState.cellStates[col][row]);
-        }
-      } else {
-        if (gameState.cellStates[col][row] !== "floor") {
-          socket.emit("update cell", col, row, gameState.cellStates[col][row]);
+  if (gameState.gameOn) {
+    socket.emit("create battlefield", gameState.cols, gameState.rows);
+    for (row = 0; row < gameState.rows; row += 1) {
+      for (col = 0; col < gameState.cols; col += 1) {
+        if (col % 2 === 1 && row % 2 === 1) {
+          if (gameState.cellStates[col][row] !== "pillar") {
+            socket.emit("update cell", col, row, gameState.cellStates[col][row]);
+          }
+        } else {
+          if (gameState.cellStates[col][row] !== "floor") {
+            socket.emit("update cell", col, row, gameState.cellStates[col][row]);
+          }
         }
       }
     }
+  } else {
+    socket.emit("display signupWindow");
   }
   for (i = 0; i < gameState.players.length; i += 1) {
     socket.emit("create sprite", gameState.players[i]);
@@ -175,7 +183,9 @@ function brief(socket) {
 function controlPlayer(player, action) {
   setGenocide();
   if (action === "bomb") {
-    placeBomb(player);
+    if (gameState.gameOn) {
+      placeBomb(player);
+    }
   } else {
     player.action = action;
     if (!player.moving) {
@@ -185,7 +195,7 @@ function controlPlayer(player, action) {
 }
 
 function createBattlefield(cols, rows, wallChance) {
-  var col, row, chance;
+  var col, row, chance, i, player;
 
   gameState.cols = cols;
   gameState.rows = rows;
@@ -202,6 +212,18 @@ function createBattlefield(cols, rows, wallChance) {
           updateCell(col, row, "wall");
         } else {
           gameState.cellStates[col][row] = "floor";
+        }
+      }
+    }
+  }
+  for (i = 0; i < gameState.players.length; i += 1) {
+    player = gameState.players[i];
+    sockets.emit("create sprite", player);
+
+    for (row = player.row - 1; row <= player.row + 1; row += 1) {
+      for (col = player.col - 1; col <= player.col + 1; col += 1) {
+        if (getCellState(col, row) !== "pillar") {
+          updateCell(col, row, "floor");
         }
       }
     }
@@ -322,7 +344,7 @@ function getBomb(col, row, remove) {
 }
 
 function getCellState(col, row) {
-  if (col < 0 || row < 0 || col >= gameState.cols || row >= gameState.rows) {
+  if (gameState.gameOn === false || col < 0 || row < 0 || col >= gameState.cols || row >= gameState.rows) {
     return "pillar";
   }
   return gameState.cellStates[col][row];
@@ -614,15 +636,18 @@ function setGenocide() {
 
   clearTimeout(genocideTO);
   genocideTO = setTimeout(function () {
-    for (i = gameState.players.length-1; i >= 0; i -= 1) {
+    for (i = gameState.players.length - 1; i >= 0; i -= 1) {
       killSprite(gameState.players[i].id);
     }
   }, 60000);
 }
 
 function startGame() {
-  createBattlefield(13, 11, 0.5);
-  addMonsters();
+  var i;
+
+  gameState.gameOn = true;
+  createBattlefield(gameState.cols, gameState.rows, 0.5);
+  addMonsters(2 * (PLAYER_START.length - gameState.players.length));
 }
 
 function updateCell(col, row, state) {

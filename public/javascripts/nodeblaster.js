@@ -8,12 +8,15 @@
 var myPlayerId;
 var panSelector = ".player", panEnd = Date.now();
 var socket;
+var signupHtml;
 
-/*global assignPlayer, createBattlefield, createSprite, implementInput,
-  implementSocket, killSprite, pan, removeSprite, setTimeout, updateCell,
-  updateSprite */
+/*global assignPlayer, createBattlefield, createSprite, displaySignupWindow,
+  implementInput, implementSocket, killSprite, pan, removeSprite, signUp,
+  updateCell, updateSprite */
 
 $(function () {
+  signupHtml = '<div id="signupWindow">' + $("#signupWindow").html() + '</div>';
+  $("#signupWindow").remove();
   implementInput();
   implementSocket();
   setInterval(pan, 20);
@@ -51,14 +54,22 @@ function createBattlefield(width, height) {
 }
 
 function createSprite(properties) {
-  var bg_img;
+  var parent, bg_img;
 
   if ($("#" + properties.id).size() === 0) {
-    $("#void").append('<div class="dead down ' + properties.type + '" id="' +
+    if ($("#playerList").size() > 0) {
+      $("#playerList").append('<li><span class="floor" id="cell_' + properties.col + '_' +
+        properties.row + '"></span><span></span></li>');
+      $("#playerList span:last").text(properties.name);
+      parent = "#cell_" + properties.col + '_' + properties.row;
+    } else {
+      parent = "#void";
+    }
+    $(parent).append('<div class="dead down ' + properties.type + '" id="' +
       properties.id + '"><img/></div>');
-    bg_img = $("#" + properties.id).css('background-image').replace(
+    bg_img = $("#" + properties.id).css("background-image").replace(
       /^url\(([\w\W]+)\)/,
-      '$1'
+      "$1"
     ).replace(/["']/g, "");
     $("#" + properties.id + " img").attr("src", bg_img);
     updateSprite({
@@ -72,12 +83,24 @@ function createSprite(properties) {
   return updateSprite(properties);
 }
 
+function displaySignupWindow() {
+  $("#void").html(signupHtml);
+  $("#signupForm").submit(function (e) {
+    $("#signupForm input").attr("disabled", "disabled");
+    signUp($("#nameTxt").val());
+    return false;
+  });
+  $("#nameTxt").val(localStorage.getItem("playerName"));
+  $("#nameTxt").focus();
+}
+
 function implementInput() {
-  var keyDown,
-    col = 0,
-    row = 0;
+  var keyDown;
 
   $(document).keydown(function (e) {
+    if ($("#signupForm").size() > 0 && !$("#signupForm input").attr("disabled")) {
+      return true;
+    }
     if (e.which === keyDown) {
       return false;
     }
@@ -145,25 +168,28 @@ function implementInput() {
 
 function implementSocket() {
   socket = io.connect();
-  socket.on('assign player', function (id) {
+  socket.on("display signupWindow", function () {
+    displaySignupWindow();
+  });
+  socket.on("assign player", function (id) {
     assignPlayer(id);
   });
-  socket.on('create battlefield', function (cols, rows) {
+  socket.on("create battlefield", function (cols, rows) {
     createBattlefield(cols, rows);
   });
-  socket.on('update cell', function (col, row, state) {
+  socket.on("update cell", function (col, row, state) {
     updateCell(col, row, state);
   });
-  socket.on('create sprite', function (properties) {
+  socket.on("create sprite", function (properties) {
     createSprite(properties);
   });
-  socket.on('kill sprite', function (id) {
+  socket.on("kill sprite", function (id) {
     killSprite(id);
   });
-  socket.on('update sprite', function (properties) {
+  socket.on("update sprite", function (properties) {
     updateSprite(properties);
   });
-  socket.on('remove sprite', function (id) {
+  socket.on("remove sprite", function (id) {
     removeSprite(id);
   });
 }
@@ -206,6 +232,11 @@ function removeSprite(id) {
   if (myPlayerId === id) {
     assignPlayer(null);
   }
+}
+
+function signUp(name) {
+  localStorage.setItem("playerName", name);
+  socket.emit("sign up", name);
 }
 
 function updateCell(col, row, state) {
