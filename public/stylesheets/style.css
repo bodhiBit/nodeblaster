@@ -1,7 +1,9 @@
 @charset "utf-8";
 body,
 table,
-td {
+td,
+h1,
+ol {
   border-spacing: 0px;
   border-width: 0px;
   margin: 0px;
@@ -43,14 +45,15 @@ table {
   width: 0px;
   height: 0px;
 }
-#signupWindow {
+#signupWindow,
+#winnerWindow {
   background: #fff;
   color: #000;
+  padding: 8px;
   max-width: 480px;
 }
 #playerList {
-  margin: 10px;
-  padding: 10px;
+  margin: 8px;
   text-align: center;
 }
 #playerList li {

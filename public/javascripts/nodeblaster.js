@@ -8,15 +8,17 @@
 var myPlayerId;
 var panSelector = ".player", panEnd = Date.now();
 var socket;
-var signupHtml;
+var signupHtml, winnerHtml;
 
 /*global assignPlayer, createBattlefield, createSprite, displaySignupWindow,
-  implementInput, implementSocket, killSprite, pan, removeSprite, signUp,
-  updateCell, updateSprite */
+  displayWinnerWindow, implementInput, implementSocket, killSprite, pan,
+  removeSprite, signUp, updateCell, updateSprite */
 
 $(function () {
   signupHtml = '<div id="signupWindow">' + $("#signupWindow").html() + '</div>';
   $("#signupWindow").remove();
+  winnerHtml = '<div id="winnerWindow">' + $("#winnerWindow").html() + '</div>';
+  $("#winnerWindow").remove();
   implementInput();
   implementSocket();
   setInterval(pan, 20);
@@ -51,6 +53,7 @@ function createBattlefield(width, height) {
   }
   html += '</table>';
   $("#void").html(html);
+  panEnd = Date.now() + 1000;
 }
 
 function createSprite(properties) {
@@ -92,6 +95,16 @@ function displaySignupWindow() {
   });
   $("#nameTxt").val(localStorage.getItem("playerName"));
   $("#nameTxt").focus();
+}
+
+function displayWinnerWindow(winner) {
+  $("#void").html(winnerHtml);
+  if (winner) {
+    $("#winnerWindow h1").text(winner.name + " has won the game! ^_^");
+    createSprite(winner);
+  } else {
+    $("#winnerWindow h1").text("OMG! Everyone died! x_X");
+  }
 }
 
 function implementInput() {
@@ -171,6 +184,9 @@ function implementSocket() {
   socket.on("display signupWindow", function () {
     displaySignupWindow();
   });
+  socket.on("display winnerWindow", function (winner) {
+    displayWinnerWindow(winner);
+  });
   socket.on("assign player", function (id) {
     assignPlayer(id);
   });
@@ -181,7 +197,9 @@ function implementSocket() {
     updateCell(col, row, state);
   });
   socket.on("create sprite", function (properties) {
-    createSprite(properties);
+    if ($("#winnerWindow").size() === 0) {
+      createSprite(properties);
+    }
   });
   socket.on("kill sprite", function (id) {
     killSprite(id);
