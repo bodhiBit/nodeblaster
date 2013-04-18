@@ -27,8 +27,15 @@ How to install and run the game
 
 ### on Ubuntu ###
 
+To install:
+
     $ sudo apt-get install git nodejs
     $ git clone https://github.com/bodhiBit/nodeblaster.git
+    $ cd nodeblaster
+    $ npm install
+
+To run:
+
     $ cd nodeblaster
     $ node app.js
 
