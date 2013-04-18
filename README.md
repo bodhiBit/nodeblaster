@@ -13,8 +13,10 @@ The game is inspired by the good old Amiga game
 
 ![Original Dyna Blaster](http://www.oldgames.sk.nyud.net/images/oldgames/action/Dyna.Blaster/dyna-009.png)
 
-How to install and run the game (on Windows)
---------------------------------------------
+How to install and run the game
+-------------------------------
+
+### on Windows ###
 
  - Download this repo by clicking the ZIP-button at the top of this page, or use git to clone it
  - Unpack it (if you downloaded the zip-file)
@@ -23,4 +25,12 @@ How to install and run the game (on Windows)
  - The game should now run and open in your browser :)
    - Share the link to play together with others on your local network.. (you may need to substitute the hostname with your ip-address)
 
+### on Ubuntu ###
+
+    $ sudo apt-get install git nodejs
+    $ git clone https://github.com/bodhiBit/nodeblaster.git
+    $ cd nodeblaster
+    $ node app.js
+
 Have fun..! :D
+
