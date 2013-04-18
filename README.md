@@ -21,6 +21,6 @@ How to install and run the game (on Windows)
  - Find start.bat and run it
    - If it opens nodejs.org in your browser, you need to install node.js from there and run start.bat again
  - The game should now run and open in your browser :)
-   - Share the link to play together with others.. (you may need to substitute the hostname with ip-address)
+   - Share the link to play together with others on your local network.. (you may need to substitute the hostname with your ip-address)
 
 Have fun..! :D
