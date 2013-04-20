@@ -148,21 +148,33 @@ function implementInput() {
       // A
       socket.emit("control", "left");
       break;
-    case 76:
-      // L
+    case 72:
+      // H
+      socket.emit("control", "left");
+      break;
+    case 73:
+      // I
+      socket.emit("control", "up");
+      break;
+    case 74:
+      // J
       socket.emit("control", "down");
       break;
-    case 79:
-      // O
-      socket.emit("control", "bomb");
-      break;
-    case 80:
-      // P
+    case 75:
+      // K
       socket.emit("control", "up");
+      break;
+    case 76:
+      // L
+      socket.emit("control", "right");
       break;
     case 83:
       // S
       socket.emit("control", "right");
+      break;
+    case 85:
+      // U
+      socket.emit("control", "bomb");
       break;
     default:
       console.log("Key down: " + keyDown);
