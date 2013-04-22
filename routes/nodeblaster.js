@@ -151,6 +151,7 @@ function addPlayer(socket, name) {
       startGame();
     }, 10000);
   }
+  console.log(name + " signed up for the game!");
 }
 
 function brief(socket) {
@@ -257,10 +258,12 @@ function detonateBomb(bomb, direction, blast, col, row) {
   doomedPlayers = getPlayersAt(col, row);
   for (i = 0; i < doomedPlayers.length; i += 1) {
     killSprite(doomedPlayers[i].id);
+    console.log(doomedPlayers[i].name + " was blown up by " + bomb.player.name + "!");
   }
   doomedMonsters = getMonstersAt(col, row);
   for (i = 0; i < doomedMonsters.length; i += 1) {
     killSprite(doomedMonsters[i].id);
+    console.log(bomb.player.name + " blew up a monster!");
   }
   switch (direction) {
   case "up":
@@ -337,8 +340,10 @@ function endGame() {
     setTimeout(function () {
       player.state = "dead";
     }, 4900);
+    console.log(player.name + " has won the game!");
   } else {
     sockets.emit("display winnerWindow", false);
+    console.log("Everyone died...");
   }
   gameState.gameOn = false;
   gameState.players = [];
@@ -349,6 +354,7 @@ function endGame() {
       sockets.emit("create sprite", gameState.players[i]);
     }
   }, 5000);
+  console.log("--------------------------");
 }
 
 function getBomb(col, row, remove) {
@@ -548,10 +554,12 @@ function runMonster(monster) {
       doomedPlayers = getPlayersAt(monster.col, monster.row);
       if (cellState.indexOf("explosion") > -1) {
         killSprite(monster.id);
+        console.log("A monster got attracted to the flame!");
       } else if (doomedPlayers.length > 0) {
         for (i = 0; i < doomedPlayers.length; i += 1) {
           player = doomedPlayers[i];
           killSprite(player.id);
+          console.log(player.name + " was killed by a monster!");
         }
       }
     }, monster.moveInterval / 2);
@@ -630,19 +638,25 @@ function runPlayer(player) {
       var cellState = getCellState(player.col, player.row);
       if (cellState.indexOf("explosion") > -1) {
         killSprite(player.id);
+        console.log(player.name + " walked right into the flame!");
       } else if (cellState === "powerup bomb") {
         player.bombs += 1;
+        console.log(player.name + " now has " + player.bombs + " bombs!");
       } else if (cellState === "powerup flame") {
         player.blast += 1;
+        console.log(player.name + "'s bombs now has a blast radius of " + player.blast + "!");
       } else if (cellState === "powerup speed") {
         player.moveInterval *= 2 / 3;
+        console.log(player.name + "'s move interval is now down to " + player.moveInterval + "!");
       } else if (cellState === "powerup detonator") {
         player.detonator = true;
         if (player.bombs > 1) {
           player.bombs -= 1;
         }
+        console.log(player.name + " now has a detonator!");
       } else if (getMonstersAt(player.col, player.row).length > 0) {
         killSprite(player.id);
+        console.log(player.name + " walked right into a monster!");
       }
       if (cellState.indexOf("powerup") > -1) {
         updateCell(player.col, player.row, "floor");
@@ -664,6 +678,7 @@ function setGenocide() {
   clearTimeout(genocideTO);
   genocideTO = setTimeout(function () {
     for (i = gameState.players.length - 1; i >= 0; i -= 1) {
+      console.log(gameState.players[i].name + " was bored to death!");
       killSprite(gameState.players[i].id);
     }
   }, 60000);
@@ -677,8 +692,10 @@ function startGame() {
   addMonsters(2 * (PLAYER_START.length - gameState.players.length));
   if (gameState.players.length <= 1) {
     singlePlayer = true;
+    console.log(gameState.players[0].name + " goes on a monster hunt alone!")
   } else {
     singlePlayer = false;
+    console.log("Let the games begin!");
   }
 }
 
