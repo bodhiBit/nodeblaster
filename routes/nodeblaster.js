@@ -1,7 +1,7 @@
 /**
  * Server side implementation for nodeblaster
  */
-/*jslint indent: 2, node: true */
+/*jshint node: true */
 "use strict";
 
 var PLAYER_START = [{
@@ -46,12 +46,6 @@ var gameState = {
   bombs: []
 };
 var sockets, genocideTO, endingTO, singlePlayer;
-
-/*global addMonster, addMonsters, addPlayer, brief, controlPlayer,
-  createBattlefield, detonateBomb, endGame, getBomb, getCellState,
-  getMonstersAt, getPlayersAt, getSprite, killSprite, placeBomb, removeBomb,
-  removeSprite, runMonster, runPlayer, sendSprite, setGenocide, startGame,
-  updateCell */
 
 module.exports = function (io) {
   sockets = io.sockets;
@@ -118,9 +112,9 @@ function addPlayer(socket, name) {
   if (gameState.gameOn || gameState.players.length >= PLAYER_START.length) {
     return false;
   }
-  num = 1;
+  num = Math.ceil(Math.random()*PLAYER_START.length);
   while (getSprite("player" + num)) {
-    num += 1;
+    num = Math.ceil(Math.random()*PLAYER_START.length);
   }
   player = {
     id: "player" + num,
@@ -692,7 +686,7 @@ function startGame() {
   addMonsters(2 * (PLAYER_START.length - gameState.players.length));
   if (gameState.players.length <= 1) {
     singlePlayer = true;
-    console.log(gameState.players[0].name + " goes on a monster hunt alone!")
+    console.log(gameState.players[0].name + " goes on a monster hunt alone!");
   } else {
     singlePlayer = false;
     console.log("Let the games begin!");
